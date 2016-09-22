@@ -1,9 +1,12 @@
 package miccheck
 
 import (
+	"strconv"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCombinationsAndOrderingOfExpectorsAndExpectations(t *testing.T) {
@@ -791,4 +794,28 @@ func TestOutliers(t *testing.T) {
 			})
 		})
 	})
+}
+
+func BenchmarkValidation(t *testing.B) {
+	terminal1 := &expectation{data: map[string]interface{}{"key": "value"}}
+	exp1 := makeExpectations(terminal1, 400, 0, 2)
+	terminal2 := &expectation{data: map[string]interface{}{"key": "value"}}
+	exp2 := makeExpectations(terminal2, 100, 0, 2)
+
+	now := time.Now()
+	exp1.validate(exp2)
+
+	assert.True(t, time.Since(now).Seconds() < 10)
+}
+
+func makeExpectations(exp *expectation, times, count, seed int) *expectation {
+	if times == count {
+		return exp
+	}
+
+	count++
+
+	nextExpectation := makeExpectations(exp, times, count, seed)
+	num := times % seed
+	return &expectation{nextExpector: nextExpectation, data: map[string]interface{}{"key" + strconv.Itoa(num): "value" + strconv.Itoa(num)}}
 }

@@ -8,40 +8,32 @@ type expectation struct {
 }
 
 func (e *expectation) validate(expectation *expectation) []map[string]interface{} {
-	var matches = []map[string]interface{}{}
-	var ourData = e.getData()
-
+	var existingMatches = []map[string]interface{}{}
 	if !e.isTerminal() {
-		previousMatches := e.nextExpector.validate(expectation)
-		matches = append(matches, previousMatches...)
+		existingMatches = e.nextExpector.validate(expectation)
 	}
 
-	skips := 0
-	for _, v := range matches {
-		if reflect.DeepEqual(v, ourData) {
-			skips++
-		}
-	}
+	return e.findMatches(expectation, existingMatches)
+}
 
+func (e *expectation) findMatches(expectation *expectation, existingMatches []map[string]interface{}) []map[string]interface{} {
 	var i = 0
-	var expectationToMatch = expectation
-	var expectationData map[string]interface{}
 
 ExpectationMatchLoop:
 	for {
-		expectationData = expectationToMatch.getData()
-		if reflect.DeepEqual(ourData, expectationData) {
-			if len(matches) == 0 {
-				matches = append(matches, ourData)
-				break ExpectationMatchLoop
+		expectationData := expectation.getData()
+		if reflect.DeepEqual(e.getData(), expectationData) {
+			if len(existingMatches) == 0 {
+				existingMatches = append(existingMatches, e.getData())
+				break
 			}
 
 			var found bool
-			for _, v := range matches {
-				if reflect.DeepEqual(v, ourData) {
+			for _, v := range existingMatches {
+				if reflect.DeepEqual(v, e.getData()) {
 					found = true
-					if i == skips {
-						matches = append(matches, ourData)
+					if i == e.countMatches(existingMatches) {
+						existingMatches = append(existingMatches, e.getData())
 						break ExpectationMatchLoop
 					}
 
@@ -50,18 +42,18 @@ ExpectationMatchLoop:
 			}
 
 			if !found {
-				matches = append(matches, ourData)
+				existingMatches = append(existingMatches, e.getData())
 			}
 		}
 
-		if expectationToMatch.isTerminal() {
-			break ExpectationMatchLoop
+		if expectation.isTerminal() {
+			break
 		}
 
-		expectationToMatch = expectationToMatch.next()
+		expectation = expectation.next()
 	}
 
-	return matches
+	return existingMatches
 }
 
 func (e *expectation) isTerminal() bool {
@@ -78,4 +70,16 @@ func (e *expectation) getData() map[string]interface{} {
 
 func (e *expectation) next() *expectation {
 	return e.nextExpector
+}
+
+func (e *expectation) countMatches(matches []map[string]interface{}) int {
+	var skips = 0
+
+	for _, v := range matches {
+		if reflect.DeepEqual(v, e.getData()) {
+			skips++
+		}
+	}
+
+	return skips
 }

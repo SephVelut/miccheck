@@ -794,6 +794,31 @@ func TestOutliers(t *testing.T) {
 			})
 		})
 	})
+
+	Convey("Given deeply nested matches of hash maps", t, func() {
+		nest1 := map[string]interface{}{"key1": "value1"}
+		nest2 := map[string]interface{}{"nest": nest1}
+		nest3 := map[string]interface{}{"nest1": nest1, "nest2": nest2}
+		nest4 := map[string]interface{}{"nest": nest3}
+		data1 := map[string]interface{}{"nest": nest4}
+		data2 := map[string]interface{}{"key1": "value1"}
+		secondData1 := map[string]interface{}{"key1": "value1"}
+		secondData2 := map[string]interface{}{"key2": "value2"}
+		secondData3 := map[string]interface{}{"nest": nest4}
+		secondData4 := map[string]interface{}{"key2": "value2"}
+		Convey("When it validates", func() {
+			exp1 := &expectation{data: data1}
+			exp2 := &expectation{data: data2, nextExpector: exp1}
+			secondExp1 := &expectation{data: secondData1}
+			secondExp2 := &expectation{data: secondData2, nextExpector: secondExp1}
+			secondExp3 := &expectation{data: secondData3, nextExpector: secondExp2}
+			secondExp4 := &expectation{data: secondData4, nextExpector: secondExp3}
+			Convey("It will result in nested matches", func() {
+				returnedData := exp2.validate(secondExp4)
+				So(returnedData, ShouldResemble, []map[string]interface{}{data1, data2})
+			})
+		})
+	})
 }
 
 func BenchmarkValidation(t *testing.B) {

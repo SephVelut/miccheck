@@ -27,11 +27,15 @@ func (m *mock) Called() {
 	}
 }
 
-func (m *mock) On(method string, expectation []map[string]interface{}) *call {
-	if expectation != nil {
-		m.expectations = map[string][]map[string]interface{}{method: expectation}
+func (m *mock) On(method string, request, response []map[string]interface{}) *call {
+	if request != nil {
+		m.expectations = map[string][]map[string]interface{}{method: request}
 
-		m.contractWriter.ExpectationPromised(expectation)
+		if response != nil {
+			m.contractWriter.ExpectationPromised(request, response)
+		} else {
+			m.contractWriter.ExpectationPromised(request, []map[string]interface{}{})
+		}
 	}
 
 	call := &call{}

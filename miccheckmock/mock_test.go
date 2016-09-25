@@ -73,7 +73,7 @@ func TestSetsMethodExpectation(t *testing.T) {
 			s := &someMock{}
 			s.SetContractWriter(contractWriter)
 
-			Convey("Then it will notify the mediator of the promised expectation", func() {
+			Convey("Then it will notify the mediator of the promised request expectation", func() {
 				expectation := []map[string]interface{}{map[string]interface{}{"key": "value"}}
 				contractWriter.On("ExpectationPromised", expectation).Once()
 
@@ -90,7 +90,7 @@ func TestSetsMethodExpectation(t *testing.T) {
 				s.On("SomeMethod", expectation)
 				s.SomeMethod()
 
-				Convey("Then it will notify the mediator of the fullfilled expectation", func() {
+				Convey("Then it will notify the mediator of the fullfilled request expectation", func() {
 					contractWriter.AssertExpectations(t)
 				})
 			})
@@ -99,7 +99,7 @@ func TestSetsMethodExpectation(t *testing.T) {
 				expectation := []map[string]interface{}{map[string]interface{}{"key": "value"}}
 				contractWriter.On("ExpectationFullfilled", expectation).Times(4)
 
-				Convey("Then it will notify the mediator of the fullfilled expectation each time", func() {
+				Convey("Then it will notify the mediator of the fullfilled requst expectation each time", func() {
 					contractWriter.On("ExpectationPromised", expectation)
 					s.On("SomeMethod", expectation)
 					s.SomeMethod()
@@ -114,7 +114,7 @@ func TestSetsMethodExpectation(t *testing.T) {
 
 			Convey("When I dont call SomeMethod", func() {
 
-				Convey("Then it will not write the expectation", func() {
+				Convey("Then it will not write the request expectation", func() {
 					contractWriter.AssertNotCalled(t, "ExpectationFullfilled")
 				})
 

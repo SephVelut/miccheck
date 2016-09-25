@@ -27,14 +27,18 @@ func (m *mock) Called() {
 	}
 }
 
-func (m *mock) On(method string, expectation []map[string]interface{}) {
+func (m *mock) On(method string, expectation []map[string]interface{}) *call {
 	if expectation != nil {
 		m.expectations = map[string][]map[string]interface{}{method: expectation}
 
 		m.contractWriter.ExpectationPromised(expectation)
 	}
 
-	m.testifyMock.On(method)
+	call := &call{}
+	tCall := m.testifyMock.On(method)
+	call.setCall(tCall)
+
+	return call
 }
 
 func (m *mock) AssertExpectations(t testingT) bool {

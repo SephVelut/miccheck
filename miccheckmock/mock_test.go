@@ -23,10 +23,16 @@ type someMock struct {
 	mock
 }
 
-func (s *someMock) SomeMethod() {
+func (s *someMock) SomeMethod() string {
 	s.Called()
 
-	s.testifyMock.Called()
+	args := s.testifyMock.Called()
+
+	if len(args) > 0 {
+		return args.String(0)
+	}
+
+	return ""
 }
 
 func TestSetsMethodExpectation(t *testing.T) {
@@ -51,7 +57,18 @@ func TestSetsMethodExpectation(t *testing.T) {
 
 		})
 
-		Convey("When I specify an expectation for SomeMethod", func() {
+		Convey("When I specify a return value", func() {
+			s = new(someMock)
+			s.On("SomeMethod", nil).andReturn("testing")
+			Convey("And I call SomeMethod", func() {
+				returnValue := s.SomeMethod()
+				Convey("Then it will return that value", func() {
+					So(returnValue, ShouldEqual, "testing")
+				})
+			})
+		})
+
+		Convey("And I specify a request expectation for SomeMethod", func() {
 			contractWriter := &ContractWriterMock{}
 			s := &someMock{}
 			s.SetContractWriter(contractWriter)
